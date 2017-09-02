@@ -19,7 +19,7 @@
   var DEFAULT_DRAG_THROTTLE_RATE = 20
   var ELLIPSIS = '…'
   var MINIMUM_JQUERY_VERSION = '1.8.3'
-  var RUN_ASSERTS = true
+  var RUN_ASSERTS = false
   var START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
   var START_POSITION = fenToObj(START_FEN)
 
@@ -191,7 +191,7 @@
   }
 
   function validSquare (square) {
-    return isString(square) && square.search(/^[a-h][1-8]$/) !== -1
+    return isString(square) && square.search(/^[a-z]+([1-9]|[0-9]+)$/) !== -1
   }
 
   if (RUN_ASSERTS) {
@@ -463,8 +463,8 @@
     var squares = []
 
     // calculate distance of all squares
-    for (var i = 0; i < 8; i++) {
-      for (var j = 0; j < 8; j++) {
+    for (var i = 0; i < config.size; i++) {
+      for (var j = 0; j < config.size; j++) {
         var s = COLUMNS[i] + (j + 1)
 
         // skip the square we're starting from
@@ -578,6 +578,14 @@
         (!isString(config.pieceTheme) && !isFunction(config.pieceTheme))) {
       config.pieceTheme = 'img/chesspieces/wikipedia/{piece}.png'
     }
+
+    config.size = config.size || 8
+    COLUMNS = new Array(config.size).fill().map((_, i) => {
+      var a = 'a'.charCodeAt(0)
+      var j = i % 26
+      var k = Math.floor(i / 26)
+      return (k ? String.fromCharCode(k - 1 + a) : '') + String.fromCharCode(j + a)
+    })
 
     // animation speeds
     if (!validAnimationSpeed(config.appearSpeed)) config.appearSpeed = DEFAULT_APPEAR_SPEED
@@ -765,18 +773,18 @@
       // pad one pixel
       var boardWidth = containerWidth - 1
 
-      while (boardWidth % 8 !== 0 && boardWidth > 0) {
+      while (boardWidth % config.size !== 0 && boardWidth > 0) {
         boardWidth = boardWidth - 1
       }
 
-      return boardWidth / 8
+      return boardWidth / config.size
     }
 
     // create random IDs for elements
     function createElIds () {
       // squares on the board
       for (var i = 0; i < COLUMNS.length; i++) {
-        for (var j = 1; j <= 8; j++) {
+        for (var j = 1; j <= config.size; j++) {
           var square = COLUMNS[i] + j
           squareElsIds[square] = square + '-' + uuid()
         }
@@ -801,23 +809,25 @@
         orientation = 'white'
       }
 
+      // n.b. Replaced the naive templating with inline interpolation;
+      // Massive performance boost with large boards.
       var html = ''
 
       // algebraic notation / orientation
       var alpha = deepCopy(COLUMNS)
-      var row = 8
+      var row = config.size
       if (orientation === 'black') {
         alpha.reverse()
         row = 1
       }
 
       var squareColor = 'white'
-      for (var i = 0; i < 8; i++) {
-        html += '<div class="{row}">'
-        for (var j = 0; j < 8; j++) {
+      for (var i = 0; i < config.size; i++) {
+        html += '<div class="' + CSS.row + '">'
+        for (var j = 0; j < config.size; j++) {
           var square = alpha[j] + row
 
-          html += '<div class="{square} ' + CSS[squareColor] + ' ' +
+          html += '<div class="' + CSS.square +' ' + CSS[squareColor] + ' ' +
             'square-' + square + '" ' +
             'style="width:' + squareSize + 'px;height:' + squareSize + 'px;" ' +
             'id="' + squareElsIds[square] + '" ' +
@@ -826,13 +836,13 @@
           if (config.showNotation) {
             // alpha notation
             if ((orientation === 'white' && row === 1) ||
-                (orientation === 'black' && row === 8)) {
-              html += '<div class="{notation} {alpha}">' + alpha[j] + '</div>'
+                (orientation === 'black' && row === config.size)) {
+              html += '<div class="' + CSS.notation + ' ' + CSS.alpha + '">' + alpha[j] + '</div>'
             }
 
             // numeric notation
             if (j === 0) {
-              html += '<div class="{notation} {numeric}">' + row + '</div>'
+              html += '<div class="' + CSS.notation + ' ' + CSS.numeric + '">' + row + '</div>'
             }
           }
 
@@ -840,9 +850,11 @@
 
           squareColor = (squareColor === 'white') ? 'black' : 'white'
         }
-        html += '<div class="{clearfix}"></div></div>'
+        html += '<div class="' + CSS.clearfix + '"></div></div>'
 
-        squareColor = (squareColor === 'white') ? 'black' : 'white'
+        if (config.size % 2 === 0) {
+          squareColor = (squareColor === 'white') ? 'black' : 'white'
+        }
 
         if (orientation === 'white') {
           row = row - 1
@@ -851,7 +863,7 @@
         }
       }
 
-      return interpolateTemplate(html, CSS)
+      return html
     }
 
     function buildPieceImgSrc (piece) {
@@ -1137,11 +1149,12 @@
     function setCurrentPosition (position) {
       var oldPos = deepCopy(currentPosition)
       var newPos = deepCopy(position)
-      var oldFen = objToFen(oldPos)
-      var newFen = objToFen(newPos)
+      // TODO: Implement a new serialization format for "change detection"
+      //var oldFen = objToFen(oldPos)
+      //var newFen = objToFen(newPos)
 
       // do nothing if no change in position
-      if (oldFen === newFen) return
+      //if (oldFen === newFen) return
 
       // run their onChange function
       if (isFunction(config.onChange)) {
@@ -1556,7 +1569,7 @@
       squareSize = calculateSquareSize()
 
       // set board width
-      $board.css('width', squareSize * 8 + 'px')
+      $board.css('width', squareSize * config.size + 'px')
 
       // set drag piece size
       $draggedPiece.css({
