@@ -1,0 +1,46 @@
+.white-1e1d7 {
+  background-color: #bbb;
+  color: #444;
+}
+
+.black-3c85d {
+  background-color: #444;
+  color: #bbb;
+}
+
+.attack.white-1e1d7 {
+  background-color: #f99;
+  color: #a44;
+}
+
+.attack.black-3c85d {
+  background-color: #a44;
+  color: #f99;
+}
+
+.hit.white-1e1d7, .hit.black-3c85d {
+  background-color: #f00;
+  color: #000;
+}
+
+.spare-pieces-7492f {
+  padding-left: 0 !important;
+}
+
+.spare-pieces-top-4028b [data-piece="bK"],
+.spare-pieces-top-4028b [data-piece="bR"],
+.spare-pieces-top-4028b [data-piece="bB"],
+.spare-pieces-top-4028b [data-piece="bN"],
+.spare-pieces-top-4028b [data-piece="bP"],
+.spare-pieces-bottom-ae20f {
+  display: none;
+}
+
+.buttons {
+  margin-top: 13px;
+}
+
+#status {
+  font-weight: bold;
+  margin-top: 13px;
+}
