@@ -2,7 +2,7 @@
 
 let nQueens = (function () {
   // Internal state and default values
-  let size = 5;
+  let size = 4;
   let counter = 0;
   let board;
 
@@ -274,7 +274,7 @@ let nQueens = (function () {
 
   function restart() {
     // Restart the game
-    size = 5;
+    size = 4;
     start();
   }
 
